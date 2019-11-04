@@ -12,25 +12,90 @@ Fraction operator-(int val, const Fraction &f) { return {}; }
 
 Fraction operator*(int val, const Fraction &f) { return {}; }
 
-Fraction::Fraction() {}
+Fraction::Fraction() {
+    isWhole = false; //Sets default to false
+    isPositiveValue = false; //Sets default to false
+    isFraction = false; //Sets default to false 
+    wholeVal = 0; //Sets default to 0
+    numVal = 0; //Sets default to 0
+    denomVal = 1; //Sets default to 1 because denominator can't be 0
+}
 
-Fraction::Fraction(int v) {}
+Fraction::Fraction(int v) {
+    isPositiveValue = v > 0; //Checks if value is greater than 0
+    wholeVal = abs(v); //Gets the positive value of v
+    isWhole = true; //Sets whole value to true
+    isFraction = false; //Sets fraction to false
+    numVal = 0; //Sets numerator value to 0
+    denomVal = 1; //Sets numberator value to 1 because denominator can't be 0
+}
 
-Fraction::Fraction(const Fraction &other) {}
+Fraction::Fraction(const Fraction &other) {
+    isWhole = other.isWhole;
+    isPositiveValue = other.isPositiveValue;
+    isFraction = other.isFraction;
+    wholeVal = other.wholeVal;
+    numVal = other.numVal;
+    denomVal = other.denomVal;
+}
 
-Fraction::Fraction(Fraction &&other) {}
+Fraction::Fraction(Fraction &&other) {
+    isWhole = other.isWhole;
+    isPositiveValue = other.isPositiveValue;
+    isFraction = other.isFraction;
+    wholeVal = other.wholeVal;
+    numVal = other.numVal;
+    denomVal = other.denomVal;
+}
 
-Fraction::Fraction(std::string s) {}
+Fraction::Fraction(std::string s) {
+    isPositiveValue = (s.find('-') != std::string::npos); //Sets positive value if there is a negative
+    isWhole = true; //Sets whole val to true
 
-int Fraction::whole() const { return -1; }
+    if(s.find('/') == std::string::npos){ //Finds a / in the string
+        wholeVal = abs(stoi(s));
+    }else if(s.find(' ') != std::string::npos){ //Checks if there is a space in in
+        isFraction = true;
+        wholeVal = abs(stoi(s.substr(0, s.find(' '))));
+        numVal = abs(stoi(s.substr(s.find(' '), s.find('/') - s.find(' '))));
+        denomVal = abs(stoi(s.substr(s.find('/') + 1, s.length() - (s.find('/') + 1))));
+    }else{
+        isFraction = true;
+        numVal = abs(stoi(s.substr(0, s.find('/'))));
+        denomVal = abs(stoi(s.substr(s.find('/') + 1, s.length() - (s.find('/') + 1))));
+    }
 
-int Fraction::numerator() const { return -1; }
+    //Adds check to make sure denominator is not 0
+    if(denomVal == 0){
+        throw std::invalid_argument("Error: Value 0 can not be in the denominator!");
+    }
+}
 
-int Fraction::denominator() const { return -1; }
+int Fraction::whole() const { 
+    return wholeVal;
+}
 
-bool Fraction::isPositive() const { return false; }
+int Fraction::numerator() const { 
+    return numVal;
+}
 
-Fraction& Fraction::operator=(const Fraction &other) { return *this; }
+int Fraction::denominator() const { 
+    return isFraction ? denomVal : 1;
+}
+
+bool Fraction::isPositive() const {
+    return isPositiveValue;
+ }
+
+Fraction& Fraction::operator=(const Fraction &other) { 
+    isWhole = other.isWhole;
+    isPositiveValue = other.isPositiveValue;
+    isFraction = other.isFraction;
+    wholeVal = other.wholeVal;
+    numVal = other.numVal;
+    denomVal = other.denomVal;
+    return *this; 
+}
 
 Fraction& Fraction::operator=(Fraction &&other) { return *this; }
 

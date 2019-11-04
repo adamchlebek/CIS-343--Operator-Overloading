@@ -60,6 +60,12 @@ class Fraction {
   private:
     ostream &writeTo(ostream &) const;
     istream &readFrom(istream &);
+    bool isWhole = false;
+    bool isPositiveValue = false;
+    bool isFraction = false;
+    int wholeVal = 0;
+    int numVal = 0;
+    int denomVal = 1;
 };
 
 /* Friend functions (non-member functions) */
