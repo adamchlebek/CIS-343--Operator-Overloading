@@ -31,38 +31,38 @@ Fraction::Fraction(int v) {
 }
 
 Fraction::Fraction(const Fraction &other) {
-    isWhole = other.isWhole;
-    isPositiveValue = other.isPositiveValue;
-    isFraction = other.isFraction;
-    wholeVal = other.wholeVal;
-    numVal = other.numVal;
-    denomVal = other.denomVal;
+    isWhole = other.isWhole; //Set isWhole to object
+    isPositiveValue = other.isPositiveValue; //Set isPositiveValue to object
+    isFraction = other.isFraction; //Set isFraction to object
+    wholeVal = other.wholeVal; //Set wholeVal to object
+    numVal = other.numVal; //Set numVal to object
+    denomVal = other.denomVal; //Set denomVal to object
 }
 
 Fraction::Fraction(Fraction &&other) {
-    isWhole = other.isWhole;
-    isPositiveValue = other.isPositiveValue;
-    isFraction = other.isFraction;
-    wholeVal = other.wholeVal;
-    numVal = other.numVal;
-    denomVal = other.denomVal;
+    isWhole = other.isWhole; //Set isWhole to object
+    isPositiveValue = other.isPositiveValue; //Set isPositiveValue to object
+    isFraction = other.isFraction; //Set isFraction to object
+    wholeVal = other.wholeVal; //Set wholeVal to object
+    numVal = other.numVal; //Set numVal to object
+    denomVal = other.denomVal; //Set denomVal to object
 }
 
 Fraction::Fraction(std::string s) {
-    isPositiveValue = (s.find('-') == std::string::npos);
-    isWhole = (s.find('/') == std::string::npos || s.find(' ') != std::string::npos);
+    isPositiveValue = (s.find('-') == std::string::npos); //Sets isPositiveValue based on if there is a negative
+    isWhole = (s.find('/') == std::string::npos || s.find(' ') != std::string::npos); //Set isWhole based on a / or a space
 
     if(s.find('/') == std::string::npos){
-        wholeVal = abs(stoi(s));
+        wholeVal = abs(stoi(s)); //WholeVal is abs of stoi of s
     }else if(s.find(' ') != std::string::npos){
-        isFraction = true;
-        wholeVal = abs(stoi(s.substr(0, s.find(' '))));
-        numVal = abs(stoi(s.substr(s.find(' '), s.find('/') - s.find(' '))));
-        denomVal = abs(stoi(s.substr(s.find('/') + 1, s.length() - (s.find('/') + 1))));
+        isFraction = true; //isFraction is true if there is a space
+        wholeVal = abs(stoi(s.substr(0, s.find(' ')))); //WholeVal is getting the first character before the space
+        numVal = abs(stoi(s.substr(s.find(' '), s.find('/') - s.find(' ')))); //Numerator is found after the whole Num and before the /
+        denomVal = abs(stoi(s.substr(s.find('/') + 1, s.length() - (s.find('/') + 1)))); //Denominator is found after the numerator and after the /
     }else{
-        isFraction = true;
-        numVal = abs(stoi(s.substr(0, s.find('/'))));
-        denomVal = abs(stoi(s.substr(s.find('/') + 1, s.length() - (s.find('/') + 1))));
+        isFraction = true; //isFraction is true if there is not a space or a /
+        numVal = abs(stoi(s.substr(0, s.find('/')))); //Numerator is found before the /
+        denomVal = abs(stoi(s.substr(s.find('/') + 1, s.length() - (s.find('/') + 1)))); //Denominator is found after the /
     }
 
     //Adds check to make sure denominator is not 0
@@ -99,17 +99,28 @@ Fraction& Fraction::operator=(const Fraction &other) {
 
 Fraction& Fraction::operator=(Fraction &&other) { return *this; }
 
-Fraction Fraction::operator+(int num) const { return {}; }
+Fraction Fraction::operator+(int num) const { 
+    Fraction f{*this};
+    f.wholeVal = f.whole() + num;
+    return f;
+}
 
 Fraction Fraction::operator+(const Fraction &other) const { return {}; }
 
 Fraction Fraction::operator-() const { return {}; }
 
-Fraction Fraction::operator-(int val) const { return {}; }
+Fraction Fraction::operator-(int val) const {
+    Fraction f{*this};
+    f.wholeVal = f.whole() - val;
+    return f;
+}
 
 Fraction Fraction::operator-(const Fraction &other) const { return {}; }
 
-Fraction Fraction::operator*(int val) const { return {}; }
+Fraction Fraction::operator*(int val) const {     
+    Fraction f{*this};
+    f.wholeVal = f.whole() * val;
+    return f; }
 
 Fraction Fraction::operator*(const Fraction &other) const { return {}; }
 
