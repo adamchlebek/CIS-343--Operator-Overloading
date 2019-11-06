@@ -49,12 +49,12 @@ Fraction::Fraction(Fraction &&other) {
 }
 
 Fraction::Fraction(std::string s) {
-    isPositiveValue = (s.find('-') != std::string::npos); //Sets positive value if there is a negative
-    isWhole = true; //Sets whole val to true
+    isPositiveValue = (s.find('-') == std::string::npos);
+    isWhole = (s.find('/') == std::string::npos || s.find(' ') != std::string::npos);
 
-    if(s.find('/') == std::string::npos){ //Finds a / in the string
+    if(s.find('/') == std::string::npos){
         wholeVal = abs(stoi(s));
-    }else if(s.find(' ') != std::string::npos){ //Checks if there is a space in in
+    }else if(s.find(' ') != std::string::npos){
         isFraction = true;
         wholeVal = abs(stoi(s.substr(0, s.find(' '))));
         numVal = abs(stoi(s.substr(s.find(' '), s.find('/') - s.find(' '))));
