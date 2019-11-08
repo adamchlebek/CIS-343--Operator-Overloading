@@ -120,7 +120,8 @@ Fraction Fraction::operator-(const Fraction &other) const { return {}; }
 Fraction Fraction::operator*(int val) const {     
     Fraction f{*this};
     f.wholeVal = f.whole() * val;
-    return f; }
+    return f; 
+}
 
 Fraction Fraction::operator*(const Fraction &other) const { return {}; }
 
@@ -134,9 +135,16 @@ void Fraction::makeProper() {}
 
 Fraction Fraction::toProper() const { return {}; }
 
-void Fraction::reduce() {}
+void Fraction::reduce() {
+    toReduced();
+}
 
-Fraction Fraction::toReduced() const { return {}; }
+Fraction Fraction::toReduced() const { 
+    Fraction f{*this};
+    f.numVal = f.numVal/gcd(f.numVal, f.denomVal);
+    f.denomVal = f.denomVal/gcd(f.numVal, f.denomVal);
+    return f;
+}
 
 ostream &Fraction::writeTo(ostream &os) const { return os; }
 
@@ -144,9 +152,28 @@ istream &Fraction::readFrom(istream &sr) /*throw(std::invalid_argument) */ {
     return sr;
 }
 
-bool Fraction::isReduced() const { return {}; }
+bool Fraction::isReduced() const {
+    return false;
+}
 
 bool Fraction::isProper() const { return {}; }
+
+int Fraction::gcd(int a, int b) const {
+    // Everything divides 0  
+    if (a == 0) 
+       return b; 
+    if (b == 0) 
+       return a; 
+   
+    // base case 
+    if (a == b) 
+        return a; 
+   
+    // a is greater 
+    if (a > b) 
+        return gcd(a-b, b); 
+    return gcd(a, b-a); 
+};
 
 ostream &operator<<(ostream &os, const Fraction &f) { return os; }
 

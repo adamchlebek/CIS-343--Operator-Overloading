@@ -37,6 +37,9 @@ class Fraction {
     bool isReduced() const;
     bool isProper() const;
 
+    //Custom Functions
+    int gcd(int a, int b) const;
+
     // Operator functions
     Fraction &operator=(const Fraction &);      // Copy assignment
     Fraction &operator=(Fraction &&);           // Move assignment

@@ -291,7 +291,6 @@ TEST_CASE("Input") {
         Fraction num;
         CHECK_THROWS_AS(source >> num, std::invalid_argument);
     }
-
 }
 
 TEST_CASE("Invalid Input") {
@@ -658,6 +657,68 @@ TEST_CASE("Operator -") {
         CHECK(zero.whole() == 0);
         CHECK(zero.numerator() == 0);
         CHECK(zero.denominator() == 1);
+    }
+}
+
+TEST_CASE("Operator - (unary)") {
+    SECTION("Flip positive whole number") {
+        Fraction a{"517"};
+        Fraction b;
+        b = -a;
+        CHECK_FALSE(b.isPositive());
+        CHECK(b.whole() == 517);
+        CHECK(b.numerator() == 0);
+        CHECK(b.denominator() == 1);
+    }
+
+    SECTION("Flip negative whole number") {
+        Fraction a{"-517"};
+        Fraction b;
+        b = -a;
+        CHECK(b.isPositive());
+        CHECK(b.whole() == 517);
+        CHECK(b.numerator() == 0);
+        CHECK(b.denominator() == 1);
+    }
+
+    SECTION("Flip positive fraction only") {
+        Fraction a{"51/73"};
+        Fraction b;
+        b = -a;
+        CHECK_FALSE(b.isPositive());
+        CHECK(b.whole() == 0);
+        CHECK(b.numerator() == 51);
+        CHECK(b.denominator() == 73);
+    }
+
+    SECTION("Flip negative fraction only") {
+        Fraction a{"-51/73"};
+        Fraction b;
+        b = -a;
+        CHECK(b.isPositive());
+        CHECK(b.whole() == 0);
+        CHECK(b.numerator() == 51);
+        CHECK(b.denominator() == 73);
+    }
+
+    SECTION("Flip positive mixed fraction") {
+        Fraction a{"23 51/73"};
+        Fraction b;
+        b = -a;
+        CHECK_FALSE(b.isPositive());
+        CHECK(b.whole() == 23);
+        CHECK(b.numerator() == 51);
+        CHECK(b.denominator() == 73);
+    }
+
+    SECTION("Flip positive mixed fraction") {
+        Fraction a{"-23 51/73"};
+        Fraction b;
+        b = -a;
+        CHECK(b.isPositive());
+        CHECK(b.whole() == 23);
+        CHECK(b.numerator() == 51);
+        CHECK(b.denominator() == 73);
     }
 }
 
