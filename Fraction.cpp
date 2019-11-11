@@ -79,8 +79,8 @@ int Fraction::numerator() const {
     return numVal;
 }
 
-int Fraction::denominator() const { 
-    return isFraction ? denomVal : 1;
+int Fraction::denominator() const {
+    return denomVal;    
 }
 
 bool Fraction::isPositive() const {
@@ -97,17 +97,42 @@ Fraction& Fraction::operator=(const Fraction &other) {
     return *this; 
 }
 
-Fraction& Fraction::operator=(Fraction &&other) { return *this; }
+Fraction& Fraction::operator=(Fraction &&other) { 
+    isWhole = std::move(other.isWhole);
+    isPositiveValue = std::move(other.isPositiveValue);
+    isFraction = std::move(other.isFraction);
+    wholeVal = std::move(other.wholeVal);
+    numVal = std::move(other.numVal);
+    denomVal = std::move(other.denomVal);
+    return *this;
+}
 
 Fraction Fraction::operator+(int num) const { 
     Fraction f{*this};
-    f.wholeVal = f.whole() + num;
+    if (num < 0){
+        f.wholeVal -= num;
+    }else{
+        f.wholeVal += num;
+    }
     return f;
 }
 
-Fraction Fraction::operator+(const Fraction &other) const { return {}; }
+Fraction Fraction::operator+(const Fraction &other) const { 
+    // Fraction f;
+    // if (num < 0){
+    //     f.wholeVal = this->wholeVal - other.wholeVal;
+    // }else{
+    //     f.wholeVal = this->wholeVal + other.wholeVal;
+    // }
+    // return f;
+    return {};
+}
 
-Fraction Fraction::operator-() const { return {}; }
+Fraction Fraction::operator-() const { 
+    Fraction f{*this};
+    f.isPositiveValue = !f.isPositiveValue;
+    return f;
+}
 
 Fraction Fraction::operator-(int val) const {
     Fraction f{*this};
@@ -129,34 +154,85 @@ optional<int> Fraction::operator[](int pos) const { return {}; }
 
 bool Fraction::operator<(const Fraction &other) const { return {}; }
 
-bool Fraction::operator==(const Fraction &other) const { return {}; }
+bool Fraction::operator==(const Fraction &other) const { 
+    Fraction f{*this};
+    Fraction t{other};
+    f = f.toReduced();
+    t = t.toReduced();
+    return f.numVal == t.numVal && f.denomVal == t.denomVal && f.wholeVal == t.wholeVal;
+}
 
-void Fraction::makeProper() {}
+void Fraction::makeProper() {
+    if(this->numVal >= this->denomVal){
+        int rem = this->numVal % this->denomVal;
+        this->wholeVal += this->numVal/this->denomVal;
+        this->numVal = rem;
+        if(rem == 0){
+            this->denomVal = 1;
+        }
+    }
+}
 
-Fraction Fraction::toProper() const { return {}; }
+Fraction Fraction::toProper() const {
+    Fraction f{*this};
+
+    if(f.numVal >= f.denomVal){
+        int rem = f.numVal % f.denomVal;
+        f.wholeVal += f.numVal/f.denomVal;
+        f.numVal = rem;
+        if(rem == 0){
+            f.denomVal = 1;
+        }
+    }
+
+    return f;
+}
 
 void Fraction::reduce() {
-    toReduced();
+    int greatest = gcd(this->numVal, this->denomVal);
+    this->numVal = this->numVal/greatest;
+    this->denomVal = this->denomVal/greatest;
 }
 
 Fraction Fraction::toReduced() const { 
     Fraction f{*this};
-    f.numVal = f.numVal/gcd(f.numVal, f.denomVal);
-    f.denomVal = f.denomVal/gcd(f.numVal, f.denomVal);
+    int greatest = gcd(f.numVal, f.denomVal);
+    f.numVal = f.numVal/greatest;
+    f.denomVal = f.denomVal/greatest;
     return f;
 }
 
 ostream &Fraction::writeTo(ostream &os) const { return os; }
 
 istream &Fraction::readFrom(istream &sr) /*throw(std::invalid_argument) */ {
+    std::string s = "";
+    char i;
+    while(!sr.eof()){
+        i = sr.get();
+        s += char(i);
+        if(i == ']'){
+            break;
+        }
+    }
+    
+    if(s[0] != '['){
+        throw std::invalid_argument("Invalid_Argument");
+    }
+
+    //string fractString = inputString.substr(indexOfB1+1, indexOfB2 - indexOfB1-1)
+
+    Fraction{s};
+
     return sr;
 }
 
 bool Fraction::isReduced() const {
-    return false;
+    return gcd(this->numVal, this->denomVal) == 1;
 }
 
-bool Fraction::isProper() const { return {}; }
+bool Fraction::isProper() const { 
+    return this->numVal < this->denomVal && this->numVal != 0;
+ }
 
 int Fraction::gcd(int a, int b) const {
     // Everything divides 0  
@@ -173,11 +249,14 @@ int Fraction::gcd(int a, int b) const {
     if (a > b) 
         return gcd(a-b, b); 
     return gcd(a, b-a); 
-};
+}
 
 ostream &operator<<(ostream &os, const Fraction &f) { return os; }
 
-istream &operator>>(istream &s, Fraction &f) { return s; }
+istream &operator>>(istream &s, Fraction &f) { 
+    f.readFrom(s);
+    return s; 
+}
 
 #if I_DO_EXTRA_CREDIT
 optional<string> Fraction::isRepeating() const { return {}; }
