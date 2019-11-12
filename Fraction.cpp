@@ -60,7 +60,7 @@ Fraction::Fraction(Fraction &&other) {
 Fraction::Fraction(std::string s) {
     isPositiveValue = (s.find('-') == std::string::npos); //Sets isPositiveValue based on if there is a negative
     isWhole = (s.find('/') == std::string::npos || s.find(' ') != std::string::npos); //Set isWhole based on a / or a space
-
+    
     if(s.find('/') == std::string::npos){
         wholeVal = abs(stoi(s)); //WholeVal is abs of stoi of s
     }else if(s.find(' ') != std::string::npos){
@@ -77,6 +77,10 @@ Fraction::Fraction(std::string s) {
     //Adds check to make sure denominator is not 0
     if(denomVal == 0){
         throw std::invalid_argument("Error: Value 0 can not be in the denominator!");
+    }
+
+    if(wholeVal == 0 && numVal == 0){
+        isPositiveValue = true;
     }
 }
 
@@ -118,23 +122,27 @@ Fraction& Fraction::operator=(Fraction &&other) {
 
 Fraction Fraction::operator+(int num) const { 
     Fraction f{*this};
-    if (num < 0){
-        f.wholeVal -= num;
-    }else{
-        f.wholeVal += num;
-    }
+    num < 0 ? f.wholeVal -= num : f.wholeVal += num;
     return f;
 }
 
 Fraction Fraction::operator+(const Fraction &other) const {
-    int greatest = gcd(denomVal, other.denomVal);
-    int newDenom = (denomVal * other.denomVal) / greatest;
-    Fraction f{};
-    f.numVal = (numVal * (newDenom / denomVal)) + ((other.numVal) * (newDenom / other.denomVal));
-    f.denomVal = newDenom;
-    f.reduce();
-    f.makeProper();
-    f.isPositiveValue = wholeVal > 0;
+    Fraction f {*this};
+    int numValOther = ((other.wholeVal * other.denomVal) + other.numVal) * f.denomVal;
+    int numValF = ((f.wholeVal * f.denomVal) + f.numVal) * other.denomVal;
+    f.denomVal *= other.denomVal;
+    f.wholeVal = 0;
+    if((f.isPositiveValue && !other.isPositiveValue) || (!f.isPositiveValue && other.isPositiveValue)){
+        if(numValF - numValOther < 0){
+            f.isPositiveValue = false;
+        }
+        f.numVal = abs(numValF - numValOther);
+    } else {
+        f.numVal = numValF + numValOther;
+    }
+    if(f.numVal > f.denomVal) f.makeProper();
+    f = f.toReduced();
+
     return f;
 }
 
@@ -145,28 +153,62 @@ Fraction Fraction::operator-() const {
 }
 
 Fraction Fraction::operator-(int val) const {
-    Fraction f{*this};
-    f.wholeVal = f.whole() - val;
-    return f;
+    Fraction f {*this};
+    Fraction v{val};
+    return f - v;
 }
 
 Fraction Fraction::operator-(const Fraction &other) const { 
-    return {};
+    Fraction f {*this};
+    int numValOther = ((other.wholeVal * other.denomVal) + other.numVal) * f.denomVal;
+    int numValF = ((f.wholeVal * f.denomVal) + f.numVal) * other.denomVal;
+    f.denomVal *= other.denomVal;
+    f.numVal = abs(numValF - numValOther);
+
+    if(f.wholeVal - other.wholeVal < 0){
+        f.isPositiveValue = false;
+    } else if(f.wholeVal - other.wholeVal > 0 && f.isPositiveValue){
+        f.isPositiveValue = true;
+    }
+    f.wholeVal = 0;
+    if(f.numVal > f.denomVal) f.makeProper();
+    f = f.toReduced();
+    return f;
 }
 
 Fraction Fraction::operator*(int val) const {     
-    Fraction f{*this};
-    f.wholeVal = f.whole() * val;
+    Fraction f {*this};
+    int improper = (f.wholeVal * f.denomVal) + f.numVal;
+    f.wholeVal = 0;
+    if(val < 0){
+        f.isPositiveValue = !f.isPositiveValue;
+        f.numVal = improper * -val;
+    } else if(val == 0) {
+        f.isPositiveValue = true;
+        f.numVal = 0;
+        f.denomVal = 1;
+    } else {
+        f.numVal = improper * val;
+    }
+    if (f.numVal > f.denomVal) f.makeProper();
+    f = f.toReduced();
     return f; 
 }
 
 Fraction Fraction::operator*(const Fraction &other) const { 
-    Fraction f{};
-    f.numVal = numVal * other.numVal;
-    f.denomVal = denomVal * other.denomVal;
-    f.reduce();
-    f.makeProper();
-    f.isPositiveValue = wholeVal > 0;
+    Fraction f {*this};
+    if(f.numVal == other.denomVal && f.denomVal == other.numVal){
+        f.wholeVal = 1;
+        f.numVal = 0;
+        f.denomVal = 1;
+        return f;
+    }
+    f.isPositiveValue = ((!other.isPositiveValue && !f.isPositiveValue) || (other.isPositiveValue && f.isPositiveValue)) || (other.wholeVal == 0 || f.wholeVal == 0);
+    f.numVal = ((f.wholeVal * f.denomVal) + f.numVal) * ((other.wholeVal * other.denomVal) + other.numVal);
+    f.denomVal = f.denomVal * other.denomVal;
+    f.wholeVal = 0;
+    f = f.toReduced();
+    if(f.numVal > f.denomVal) f.makeProper();
     return f;
 }
 
@@ -224,12 +266,12 @@ bool Fraction::operator==(const Fraction &other) const {
 }
 
 void Fraction::makeProper() {
-    if(this->numVal >= this->denomVal){
-        int rem = this->numVal % this->denomVal;
-        this->wholeVal += this->numVal/this->denomVal;
-        this->numVal = rem;
+    if(numVal >= denomVal){
+        int rem = numVal % denomVal;
+        wholeVal += numVal/denomVal;
+        numVal = rem;
         if(rem == 0){
-            this->denomVal = 1;
+            denomVal = 1;
         }
     }
 }
@@ -250,14 +292,17 @@ Fraction Fraction::toProper() const {
 }
 
 void Fraction::reduce() {
-    int greatest = gcd(this->numVal, this->denomVal);
-    this->numVal = this->numVal/greatest;
-    this->denomVal = this->denomVal/greatest;
+    int greatest = gcd(numVal, denomVal);
+    numVal = numVal/greatest;
+    denomVal = denomVal/greatest;
 }
 
 Fraction Fraction::toReduced() const { 
     Fraction f{*this};
     int greatest = gcd(f.numVal, f.denomVal);
+    if(f.wholeVal < 0){
+        f.wholeVal *= -1;
+    }
     f.numVal = f.numVal/greatest;
     f.denomVal = f.denomVal/greatest;
     return f;
@@ -265,34 +310,58 @@ Fraction Fraction::toReduced() const {
 
 ostream &Fraction::writeTo(ostream &os) const { return os; }
 
-istream &Fraction::readFrom(istream &sr) /*throw(std::invalid_argument) */ {    
-    // std::string s = "";
-    // char i;
-    // while(!sr.eof()){
-    //     i = sr.get();
-    //     s += char(i);
-    //     if(i == ']'){
-    //         break;
-    //     }
-    // }
+istream &Fraction::readFrom(istream &sr) /*throw(std::invalid_argument) */ { 
+    char c;
+    sr >> std::skipws >> c;
+    std::string str = "";
+    str = str + c;
+    sr.peek();
     
-    // if(s[0] != '['){
-    //     throw std::invalid_argument("Invalid_Argument");
-    // }
+    while(sr.good()){
+        sr >> std::noskipws >> c;
+        str = str + c;
+        if(c == ']'){
+            break;
+        }
+        if(isalpha(c) || c == '#' || c == '%'){
+            throw std::invalid_argument("Invalid Character");
+        }
+        sr.peek();
+    }
 
-    // //string fractString = inputString.substr(indexOfB1+1, indexOfB2 - indexOfB1-1)
+    if(str[1] == ']'){
+        throw std::invalid_argument("No numbers");
+    }
 
-    // Fraction{s};
+    if(str[0] != '['){
+        throw std::invalid_argument("Starting character not [");
+    }
+
+    if(str[str.size() - 1] != ']'){
+        throw std::invalid_argument("Ending character not ]");
+    }
+
+    if(str[str.size() - 2] != '0' && str[str.size() - 3] == '/'){
+        throw std::invalid_argument("Denominator can not be 0");
+    }
+
+    if(str.find('-') != std::string::npos){
+        if(!isdigit(str[str.find('-') + 1])){
+            throw std::invalid_argument("Negative with no following number");
+        }
+    }
+        
+    *this = Fraction{str};
 
     return sr;
 }
 
 bool Fraction::isReduced() const {
-    return gcd(this->numVal, this->denomVal) == 1;
+    return gcd(numVal, denomVal) == 1;
 }
 
 bool Fraction::isProper() const { 
-    return this->numVal < this->denomVal && this->numVal != 0;
+    return numVal < denomVal && numVal != 0;
  }
 
 int Fraction::gcd(int a, int b) const {
