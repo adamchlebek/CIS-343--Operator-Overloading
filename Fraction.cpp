@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <regex>
+#include <cmath>
 
 using namespace std;
 
@@ -19,6 +20,16 @@ Fraction operator-(int val, const Fraction &f) {
 Fraction operator*(int val, const Fraction &f) { 
     Fraction fTemp{ val };
     return f * fTemp;    
+}
+
+Fraction operator/(int val, const Fraction &f){
+    Fraction fTemp{ val };
+    return fTemp / f;
+}
+
+Fraction operator^(int val, const Fraction &f){
+    Fraction fTemp{ val };
+    return fTemp ^ f;
 }
 
 Fraction::Fraction() {
@@ -251,12 +262,20 @@ bool Fraction::operator<(const Fraction &other) const {
     return ((newNum / denomVal) < (otherNewNum / other.denomVal));
 }
 
+bool Fraction::operator>(const Fraction &other) const {
+    int newNum = (denomVal * wholeVal + numVal);
+    if(!isPositiveValue) newNum *= -1;
+    int otherNewNum = (other.denomVal * other.wholeVal + other.numVal);
+    if(!other.isPositiveValue) otherNewNum *= -1;
+    return ((newNum / denomVal) < (otherNewNum / other.denomVal));
+}
+
 bool Fraction::operator==(const Fraction &other) const { 
     Fraction t{other};
     t = t.toReduced();
     Fraction f{*this};
     f = f.toReduced();
-    return f.numVal == t.numVal && f.denomVal == t.denomVal && f.wholeVal == t.wholeVal;
+    return f.numVal == t.numVal && f.denomVal == t.denomVal && f.wholeVal == t.wholeVal && f.isPositiveValue == t.isPositiveValue;
 }
 
 void Fraction::makeProper() {
@@ -376,6 +395,60 @@ ostream &operator<<(ostream &os, const Fraction &f) {
 istream &operator>>(istream &s, Fraction &f) { 
     f.readFrom(s);
     return s; 
+}
+
+
+Fraction Fraction::operator/(int val) const {     
+    Fraction f {*this};
+    f.numVal = (f.denomVal * f.wholeVal) + f.numVal;
+    f.denomVal *= abs(val);
+    if(val < 0) f.isPositiveValue = !f.isPositiveValue;
+
+    f.wholeVal = 0;
+
+    if (f.numVal > f.denomVal) f.makeProper();
+    f = f.toReduced();
+    return f; 
+}
+
+Fraction Fraction::operator/(const Fraction &other) const { 
+    Fraction f {*this};
+    int newNumF = (f.denomVal * f.wholeVal) + f.numVal;
+    int newNumOther = (other.denomVal * other.wholeVal) + other.numVal;
+    f.isPositiveValue = ((!other.isPositiveValue && !f.isPositiveValue) || (other.isPositiveValue && f.isPositiveValue)) || (other.wholeVal == 0 || f.wholeVal == 0);
+
+    f.numVal = newNumF * other.denomVal;
+    f.wholeVal = 0;
+    f.denomVal *= newNumOther;
+    if(f.numVal > f.denomVal) f.makeProper();
+    f = f.toReduced();
+
+    return f;
+}
+
+Fraction Fraction::operator^(int val) const {     
+    Fraction f {*this};
+    int newNum = (f.denomVal * f.wholeVal) + f.numVal;
+    f.isPositiveValue = newNum >= 0;
+
+    f.wholeVal = 0;
+    f.numVal = pow(newNum, abs(val));
+    f.denomVal = pow(f.denomVal, abs(val));
+
+
+    if(val < 0){
+        int temp = f.denomVal;
+        f.denomVal = f.numVal;
+        f.numVal = temp;
+    }
+
+    if(f.numVal > f.denomVal) f.makeProper();
+    f = f.toReduced();
+    return f; 
+}
+
+Fraction Fraction::operator^(const Fraction &other) const { 
+    throw std::invalid_argument("Invalid power value");
 }
 
 #if I_DO_EXTRA_CREDIT

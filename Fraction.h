@@ -14,6 +14,8 @@ class Fraction {
     friend Fraction operator+(int, const Fraction &);
     friend Fraction operator-(int, const Fraction &);
     friend Fraction operator*(int, const Fraction &);
+    friend Fraction operator/(int, const Fraction &);
+    friend Fraction operator^(int, const Fraction &);
 
   public:
     /* Constructors */
@@ -50,7 +52,12 @@ class Fraction {
     Fraction operator-(const Fraction &) const; // binary minus: Frac - Frac
     Fraction operator*(int)const;               // Multiply: Frac * int
     Fraction operator*(const Fraction &)const;  // Multiply: Frac * Frac
+    Fraction operator/(int)const;               // Divide: Frac / int
+    Fraction operator/(const Fraction &)const;  // Divide: Frac / Frac
+    Fraction operator^(int)const;               // Power: Frac ^ int
+    Fraction operator^(const Fraction &)const;  // Power: Frac ^ Frac
     bool operator<(const Fraction &) const;     // Compare Frac < Frac
+    bool operator>(const Fraction &) const;     // Compare Frac > Frac
     bool operator==(const Fraction &) const;    // Compare Frac == Frac
     optional<int> operator[](int) const;        // Component access Frac[i]
 

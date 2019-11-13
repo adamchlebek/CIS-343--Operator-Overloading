@@ -11,4 +11,5 @@ include_directories(.)
 add_executable(runtest
         Fraction.cpp
         Fraction.h
-        runtest.cpp)
+        runtest.cpp
+        customtest.cpp)
