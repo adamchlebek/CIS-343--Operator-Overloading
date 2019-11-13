@@ -13,7 +13,7 @@ Fraction operator+(int val, const Fraction &f) {
 
 Fraction operator-(int val, const Fraction &f) { 
     Fraction fTemp{ val };
-    return f - fTemp;
+    return fTemp - f;
 }
 
 Fraction operator*(int val, const Fraction &f) { 
@@ -58,8 +58,8 @@ Fraction::Fraction(Fraction &&other) {
 }
 
 Fraction::Fraction(std::string s) {
-    isPositiveValue = (s.find('-') == std::string::npos); //Sets isPositiveValue based on if there is a negative
     isWhole = (s.find('/') == std::string::npos || s.find(' ') != std::string::npos); //Set isWhole based on a / or a space
+    isPositiveValue = (s.find('-') == std::string::npos); //Sets isPositiveValue based on if there is a negative
     
     if(s.find('/') == std::string::npos){
         wholeVal = abs(stoi(s)); //WholeVal is abs of stoi of s
@@ -162,14 +162,12 @@ Fraction Fraction::operator-(const Fraction &other) const {
     Fraction f {*this};
     int numValOther = ((other.wholeVal * other.denomVal) + other.numVal) * f.denomVal;
     int numValF = ((f.wholeVal * f.denomVal) + f.numVal) * other.denomVal;
-    f.denomVal *= other.denomVal;
     f.numVal = abs(numValF - numValOther);
+    f.denomVal *= other.denomVal;
 
-    if(f.wholeVal - other.wholeVal < 0){
-        f.isPositiveValue = false;
-    } else if(f.wholeVal - other.wholeVal > 0 && f.isPositiveValue){
-        f.isPositiveValue = true;
-    }
+    if(f.wholeVal - other.wholeVal < 0) f.isPositiveValue = false;
+    if(f.wholeVal - other.wholeVal > 0 && f.isPositiveValue) f.isPositiveValue = true;
+    
     f.wholeVal = 0;
     if(f.numVal > f.denomVal) f.makeProper();
     f = f.toReduced();
@@ -247,21 +245,17 @@ optional<int> Fraction::operator[](int pos) const {
 
 bool Fraction::operator<(const Fraction &other) const {
     int newNum = (denomVal * wholeVal + numVal);
-    if(!isPositiveValue){
-        newNum *= -1;
-    }
+    if(!isPositiveValue) newNum *= -1;
     int otherNewNum = (other.denomVal * other.wholeVal + other.numVal);
-    if(!other.isPositiveValue){
-        otherNewNum *= -1;
-    }
+    if(!other.isPositiveValue) otherNewNum *= -1;
     return ((newNum / denomVal) < (otherNewNum / other.denomVal));
 }
 
 bool Fraction::operator==(const Fraction &other) const { 
-    Fraction f{*this};
     Fraction t{other};
-    f = f.toReduced();
     t = t.toReduced();
+    Fraction f{*this};
+    f = f.toReduced();
     return f.numVal == t.numVal && f.denomVal == t.denomVal && f.wholeVal == t.wholeVal;
 }
 
@@ -270,9 +264,7 @@ void Fraction::makeProper() {
         int rem = numVal % denomVal;
         wholeVal += numVal/denomVal;
         numVal = rem;
-        if(rem == 0){
-            denomVal = 1;
-        }
+        if(rem == 0) denomVal = 1;
     }
 }
 
@@ -283,9 +275,7 @@ Fraction Fraction::toProper() const {
         int rem = f.numVal % f.denomVal;
         f.wholeVal += f.numVal/f.denomVal;
         f.numVal = rem;
-        if(rem == 0){
-            f.denomVal = 1;
-        }
+        if(rem == 0) f.denomVal = 1;
     }
 
     return f;
@@ -300,15 +290,34 @@ void Fraction::reduce() {
 Fraction Fraction::toReduced() const { 
     Fraction f{*this};
     int greatest = gcd(f.numVal, f.denomVal);
-    if(f.wholeVal < 0){
-        f.wholeVal *= -1;
-    }
+    if(f.wholeVal < 0) f.wholeVal *= -1;
     f.numVal = f.numVal/greatest;
     f.denomVal = f.denomVal/greatest;
     return f;
 }
 
-ostream &Fraction::writeTo(ostream &os) const { return os; }
+ostream &Fraction::writeTo(ostream &os) const { 
+	os << "[";
+
+    if(whole() == 0 && numerator() == 0 && denominator() == 1){
+        os << "0]";
+        return os;
+    }  
+
+	if (!isPositive()) os << "-";
+
+	if (whole() != 0) os << whole();
+
+	if (numerator() != 0)
+	{
+		if (whole() != 0) os << " ";
+		os << numerator() << "/" << denominator();
+	}
+
+	os << "]";
+
+	return os;
+}
 
 istream &Fraction::readFrom(istream &sr) /*throw(std::invalid_argument) */ { 
     char c;
@@ -320,38 +329,22 @@ istream &Fraction::readFrom(istream &sr) /*throw(std::invalid_argument) */ {
     while(sr.good()){
         sr >> std::noskipws >> c;
         str = str + c;
-        if(c == ']'){
-            break;
-        }
-        if(isalpha(c) || c == '#' || c == '%'){
-            throw std::invalid_argument("Invalid Character");
-        }
+        if(c == ']') break;
+        if(isalpha(c) || c == '#' || c == '%') throw std::invalid_argument("Invalid Character");
         sr.peek();
     }
 
-    if(str[1] == ']'){
-        throw std::invalid_argument("No numbers");
-    }
+    if(str[1] == ']') throw std::invalid_argument("No numbers");
 
-    if(str[0] != '['){
-        throw std::invalid_argument("Starting character not [");
-    }
+    if(str[0] != '[') throw std::invalid_argument("Starting character not [");
 
-    if(str[str.size() - 1] != ']'){
-        throw std::invalid_argument("Ending character not ]");
-    }
+    if(str[str.size() - 1] != ']') throw std::invalid_argument("Ending character not ]");
 
-    if(str[str.size() - 2] != '0' && str[str.size() - 3] == '/'){
-        throw std::invalid_argument("Denominator can not be 0");
-    }
+    if(str[str.size() - 2] != '0' && str[str.size() - 3] == '/') throw std::invalid_argument("Denominator can not be 0");
 
-    if(str.find('-') != std::string::npos){
-        if(!isdigit(str[str.find('-') + 1])){
-            throw std::invalid_argument("Negative with no following number");
-        }
-    }
+    if(str.find('-') != std::string::npos) if(!isdigit(str[str.find('-') + 1])) throw std::invalid_argument("Negative with no following number");
         
-    *this = Fraction{str};
+    *this = Fraction(str);
 
     return sr;
 }
@@ -364,20 +357,14 @@ bool Fraction::isProper() const {
     return numVal < denomVal && numVal != 0;
  }
 
-int Fraction::gcd(int a, int b) const {
-    // Everything divides 0  
-    if (a == 0) 
-       return b; 
-    if (b == 0) 
-       return a; 
+int Fraction::gcd(int a, int b) const { 
+    if (a == 0) return b; 
+    if (b == 0) return a; 
    
-    // base case 
-    if (a == b) 
-        return a; 
+    if (a == b) return a; 
    
-    // a is greater 
-    if (a > b) 
-        return gcd(a-b, b); 
+    if (a > b) return gcd(a-b, b); 
+
     return gcd(a, b-a); 
 }
 
